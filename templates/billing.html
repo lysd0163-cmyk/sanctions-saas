@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Billing — Sanctum{% endblock %}
+{% block content %}
+
+<div class="hero" style="padding-top:48px; padding-bottom:24px;">
+  <div class="eyebrow">Billing</div>
+  <h1>Your plan.</h1>
+</div>
+
+<div class="tool-card" style="max-width:480px;">
+  {% if current_user.subscription_status == 'active' %}
+    <span class="label">Current plan</span>
+    <p style="font-family:var(--serif); font-size:24px; color:var(--brass); margin:0 0 18px;">Pro</p>
+    <p style="color:var(--text-dim); font-size:14px; margin-bottom:20px;">Manage your payment method, view invoices, or cancel anytime in the Stripe billing portal.</p>
+    <form method="POST" action="{{ url_for('billing.portal') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="btn btn-primary btn-block">Manage billing</button>
+    </form>
+  {% else %}
+    <span class="label">Current plan</span>
+    <p style="font-family:var(--serif); font-size:24px; color:var(--text); margin:0 0 8px;">Free</p>
+    <p style="color:var(--text-dim); font-size:14px; margin-bottom:20px;">{{ current_user.screenings_used }} of {{ free_quota }} free screenings used.</p>
+    <a href="{{ url_for('billing.pricing') }}" class="btn btn-primary btn-block">Upgrade to Pro</a>
+  {% endif %}
+</div>
+
+{% endblock %}

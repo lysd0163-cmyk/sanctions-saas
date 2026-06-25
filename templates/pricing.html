@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Pricing — Sanctum{% endblock %}
+{% block content %}
+
+<div class="hero" style="padding-top:48px;">
+  <div class="eyebrow">Pricing</div>
+  <h1>Simple, two tiers.</h1>
+  <p class="lede">Start free. Upgrade when you need batch screening or run out of free checks.</p>
+</div>
+
+{% if not stripe_configured %}
+<div class="notice" style="margin-bottom:36px;">
+  <ul><li><strong>Billing isn't connected yet on this deployment.</strong> The site owner needs to add Stripe API keys before upgrades can be processed. See the README.</li></ul>
+</div>
+{% endif %}
+
+<div class="plans">
+  <div class="plan-card">
+    <div class="plan-name">Free</div>
+    <div class="plan-price">$0</div>
+    <ul class="plan-features">
+      <li>10 single-name screenings, lifetime</li>
+      <li>OFAC + UN list coverage</li>
+      <li>Fuzzy matching with adjustable sensitivity</li>
+      <li>No batch / CSV screening</li>
+    </ul>
+    {% if current_user %}
+      <a href="{{ url_for('screening.dashboard') }}" class="btn btn-ghost btn-block">Go to dashboard</a>
+    {% else %}
+      <a href="{{ url_for('auth.signup') }}" class="btn btn-ghost btn-block">Start free</a>
+    {% endif %}
+  </div>
+
+  <div class="plan-card featured">
+    <div class="plan-name">Pro</div>
+    <div class="plan-price">${{ pro_price }}<span>/month</span></div>
+    <ul class="plan-features">
+      <li>Unlimited single-name screening</li>
+      <li>Batch CSV screening (up to 5,000 rows per file)</li>
+      <li>Watchlist monitoring with email alerts on new matches</li>
+      <li>Developer API access with your own API key</li>
+      <li>Optional EU Consolidated List, with your own token</li>
+      <li>Cancel anytime from your billing page</li>
+    </ul>
+    {% if current_user and current_user.subscription_status == 'active' %}
+      <a href="{{ url_for('billing.manage') }}" class="btn btn-primary btn-block">You're on Pro — manage</a>
+    {% elif current_user %}
+      <form method="POST" action="{{ url_for('billing.checkout') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-primary btn-block">Upgrade to Pro</button>
+      </form>
+    {% else %}
+      <a href="{{ url_for('auth.signup') }}?next={{ url_for('billing.pricing') }}" class="btn btn-primary btn-block">Sign up to upgrade</a>
+    {% endif %}
+  </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Watchlist — Sanctum{% endblock %}
+{% block content %}
+
+<div class="hero" style="padding-top:40px; padding-bottom:8px;">
+  <div class="eyebrow">Monitoring</div>
+  <h1>Watchlist.</h1>
+  <p class="lede">Add names you want checked automatically. You'll get an email only when a name newly matches a sanctions list it didn't match before.</p>
+</div>
+
+{% if locked %}
+<div class="locked-feature">
+  Continuous monitoring is a Pro feature.
+  <a href="{{ url_for('billing.pricing') }}" class="btn btn-primary">Upgrade to Pro</a>
+</div>
+{% else %}
+
+<div class="tool-card" style="margin-bottom:32px;">
+  <span class="label">Add a name to monitor</span>
+  <form method="POST" action="{{ url_for('watchlist.add') }}" class="batch-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="row">
+      <input type="text" name="name" placeholder="Name to monitor" maxlength="200" required style="flex:1 1 240px;">
+      <input type="text" name="note" placeholder="Note (optional) — e.g. vendor, contract #" style="flex:1 1 200px;">
+      <button type="submit" class="btn btn-primary">Add</button>
+    </div>
+  </form>
+</div>
+
+<section class="block" style="border-top:none; padding-top:0;">
+  <h2>Currently monitoring ({{ entries|length }})</h2>
+  {% if entries %}
+    {% for e in entries %}
+    <div class="match-row">
+      <div>
+        <div class="match-name">{{ e.name }}</div>
+        <div class="match-meta">
+          {{ e.note or 'No note' }} ·
+          {% if e.last_checked_at %}last checked {{ e.last_checked_at[:16].replace('T', ' ') }}{% else %}not checked yet{% endif %}
+        </div>
+      </div>
+      <form method="POST" action="{{ url_for('watchlist.delete', entry_id=e.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-ghost" style="font-size:11px; padding:8px 12px;">Remove</button>
+      </form>
+    </div>
+    {% endfor %}
+  {% else %}
+    <p style="color:var(--text-dim);">Nothing on your watchlist yet.</p>
+  {% endif %}
+</section>
+
+<section class="block">
+  <h2>Recent alerts</h2>
+  {% if alerts %}
+    {% for a in alerts %}
+    <div class="match-row">
+      <div>
+        <div class="match-name">{{ a.watched_name }} → {{ a.match_name }}</div>
+        <div class="match-meta">{{ a.match_source }} · score {{ '%.1f'|format(a.match_score) if a.match_score else '—' }} · {{ a.created_at[:16].replace('T', ' ') }}{% if not a.emailed %} · email not sent (no SMTP configured){% endif %}</div>
+      </div>
+    </div>
+    {% endfor %}
+  {% else %}
+    <p style="color:var(--text-dim);">No alerts yet. New matches will show up here.</p>
+  {% endif %}
+</section>
+
+{% endif %}
+{% endblock %}

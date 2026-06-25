@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}Sanctum — Sanctions Screening{% endblock %}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<nav class="nav">
+  <div class="wrap">
+    <a href="{{ url_for('landing.index') }}" class="brand"><span class="seal-dot"></span>Sanctum</a>
+    <div class="nav-links">
+      <a href="{{ url_for('billing.pricing') }}">Pricing</a>
+      {% if current_user %}
+        <a href="{{ url_for('screening.dashboard') }}">Dashboard</a>
+        <a href="{{ url_for('screening.history') }}">History</a>
+        <a href="{{ url_for('watchlist.index') }}">Watchlist</a>
+        <a href="{{ url_for('api_keys.index') }}">API Keys</a>
+        <a href="{{ url_for('billing.manage') }}">Billing</a>
+        <a href="{{ url_for('auth.logout') }}">Log out</a>
+      {% else %}
+        <a href="{{ url_for('auth.login') }}">Log in</a>
+        <a href="{{ url_for('auth.signup') }}" class="btn-nav">Get started</a>
+      {% endif %}
+    </div>
+  </div>
+</nav>
+
+<div class="wrap" style="padding-top:24px;">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="flash flash-{{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+</div>
+
+<div class="wrap">
+{% block content %}{% endblock %}
+</div>
+
+<footer>
+  <div class="wrap">
+    <span>Built on public, official sanctions-list data.</span>
+    <span>No claim of 100% compliance is made or implied — and none should be.</span>
+  </div>
+</footer>
+
+</body>
+</html>

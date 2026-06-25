@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+{% block title %}Sanctum — Check a name against official sanctions lists{% endblock %}
+{% block content %}
+
+<div class="hero">
+  <div class="eyebrow">Screening Registry</div>
+  <h1>Know who you're<br>doing business <em>with</em>.</h1>
+  <p class="lede">Fuzzy-matched against the OFAC SDN List and the UN Security Council Consolidated List. A first pass for human review — not a guarantee.</p>
+
+  <div class="tool-card">
+    <span class="label">Try it — no account needed</span>
+    <div class="screen-row">
+      <input type="text" id="nameInput" placeholder="e.g. a customer, counterparty, or vendor name" maxlength="200" autocomplete="off">
+      <button id="screenBtn" type="button" class="btn btn-primary">Screen</button>
+    </div>
+    <div class="status-banner" id="statusBanner"></div>
+    <div class="result-area" id="resultArea"></div>
+  </div>
+</div>
+
+<section class="block">
+  <h2>How a name moves through this tool</h2>
+  <ol class="steps">
+    <li><span class="num">01</span><span class="txt"><strong>You submit a name.</strong><span>A single name here, or a full CSV once you're screening from your dashboard.</span></span></li>
+    <li><span class="num">02</span><span class="txt"><strong>It's normalized.</strong><span>Accents, punctuation, and word order are stripped out so spelling variants don't slip through.</span></span></li>
+    <li><span class="num">03</span><span class="txt"><strong>It's compared to every name and alias on file.</strong><span>Across the OFAC SDN List and the UN Consolidated List, scored 0–100 for similarity.</span></span></li>
+    <li><span class="num">04</span><span class="txt"><strong>Matches above your threshold come back flagged.</strong><span>For a person to review — never as an automatic accept or reject.</span></span></li>
+  </ol>
+</section>
+
+<section class="block">
+  <h2>Sources on file</h2>
+  <ul class="sources">
+    <li><span>OFAC Specially Designated Nationals (SDN) List</span><code>treasury.gov/ofac/downloads/sdn.xml</code></li>
+    <li><span>UN Security Council Consolidated List</span><code>scsanctions.un.org</code></li>
+    <li><span>EU Consolidated Financial Sanctions List (optional)</span><code>requires your own free token</code></li>
+  </ul>
+</section>
+
+<section class="block">
+  <h2>Plans</h2>
+  <div class="plans">
+    <div class="plan-card">
+      <div class="plan-name">Free</div>
+      <div class="plan-price">$0</div>
+      <ul class="plan-features">
+        <li>10 single-name screenings, lifetime</li>
+        <li>OFAC + UN list coverage</li>
+        <li>No batch / CSV screening</li>
+      </ul>
+      <a href="{{ url_for('auth.signup') }}" class="btn btn-ghost btn-block">Start free</a>
+    </div>
+    <div class="plan-card featured">
+      <div class="plan-name">Pro</div>
+      <div class="plan-price">$49<span>/month</span></div>
+      <ul class="plan-features">
+        <li>Unlimited single-name screening</li>
+        <li>Batch CSV screening</li>
+        <li>Watchlist monitoring + email alerts</li>
+        <li>Developer API access</li>
+      </ul>
+      <a href="{{ url_for('billing.pricing') }}" class="btn btn-primary btn-block">View details</a>
+    </div>
+  </div>
+</section>
+
+<section class="block">
+  <div class="notice">
+    <ul>
+      <li><strong>No match ≠ cleared.</strong> It means no match against the lists currently loaded — not a clean bill of health against every sanctions regime worldwide.</li>
+      <li><strong>Name-only matching is one layer, not the whole control.</strong> Full compliance programs also check date of birth, nationality, ID numbers, and ownership structure.</li>
+      <li><strong>This is not legal advice.</strong> It does not replace a compliance officer, a lawyer, or a licensed KYC/AML provider.</li>
+      <li><strong>Every flagged match needs a human decision.</strong> Fuzzy matching produces false positives and false negatives.</li>
+    </ul>
+  </div>
+</section>
+
+<script>
+const nameInput = document.getElementById('nameInput');
+const screenBtn = document.getElementById('screenBtn');
+const statusBanner = document.getElementById('statusBanner');
+const resultArea = document.getElementById('resultArea');
+
+function escapeHtml(str){ const d = document.createElement('div'); d.textContent = str; return d.innerHTML; }
+
+function renderResult(data){
+  resultArea.innerHTML = '';
+  if (data.used_demo_data){
+    statusBanner.textContent = 'Live list data could not be reached right now — showing results against small fictional demo data only.';
+    statusBanner.className = 'status-banner show demo';
+  } else {
+    statusBanner.className = 'status-banner';
+  }
+
+  const wrap = document.createElement('div');
+  wrap.className = 'seal-wrap';
+  const seal = document.createElement('div');
+  if (data.match_count > 0){ seal.className = 'seal flag'; seal.textContent = 'Flagged'; }
+  else { seal.className = 'seal clear'; seal.textContent = 'No match'; }
+  wrap.appendChild(seal);
+  resultArea.appendChild(wrap);
+
+  if (data.match_count === 0){
+    const p = document.createElement('p');
+    p.className = 'result-empty';
+    p.style.textAlign = 'center';
+    p.textContent = `No matches for "${data.query}". ${data.checks_remaining} free preview check(s) left.`;
+    resultArea.appendChild(p);
+    return;
+  }
+
+  data.matches.forEach(m => {
+    const row = document.createElement('div');
+    row.className = 'match-row';
+    row.innerHTML = `<div><div class="match-name">${escapeHtml(m.name)}</div>
+      <div class="match-meta">${escapeHtml(m.source)} · ${escapeHtml(m.risk)}</div></div>
+      <div class="match-score mono">${m.score.toFixed(1)}</div>`;
+    resultArea.appendChild(row);
+  });
+
+  const p = document.createElement('p');
+  p.className = 'result-empty';
+  p.style.textAlign = 'center';
+  p.style.marginTop = '14px';
+  p.innerHTML = `${data.checks_remaining} free preview check(s) left. <a href="{{ url_for('auth.signup') }}">Create an account</a> to keep going.`;
+  resultArea.appendChild(p);
+}
+
+async function runScreen(){
+  const name = nameInput.value.trim();
+  if (!name) { nameInput.focus(); return; }
+
+  screenBtn.disabled = true;
+  screenBtn.textContent = 'Screening…';
+  resultArea.innerHTML = '<p class="result-empty">Checking against OFAC + UN lists…</p>';
+  statusBanner.className = 'status-banner';
+
+  try {
+    const res = await fetch('/api/demo-screen', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({name: name})
+    });
+    const data = await res.json();
+    if (!res.ok){
+      resultArea.innerHTML = `<p class="result-empty">${escapeHtml(data.error || 'Something went wrong.')}</p>`;
+      if (data.limit_reached){
+        resultArea.innerHTML += `<p class="result-empty" style="margin-top:8px;"><a href="{{ url_for('auth.signup') }}">Create a free account</a> to keep screening.</p>`;
+      }
+      return;
+    }
+    renderResult(data);
+  } catch (err){
+    resultArea.innerHTML = '<p class="result-empty">Could not reach the screening service. Check your connection and try again.</p>';
+  } finally {
+    screenBtn.disabled = false;
+    screenBtn.textContent = 'Screen';
+  }
+}
+
+screenBtn.addEventListener('click', runScreen);
+nameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') runScreen(); });
+</script>
+{% endblock %}

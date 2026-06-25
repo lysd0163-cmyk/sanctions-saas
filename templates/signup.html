@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Create an account — Sanctum{% endblock %}
+{% block content %}
+<div class="auth-page">
+  <div class="wrap-narrow">
+    <div class="auth-card">
+      <h1>Create your account</h1>
+      <div class="sub">10 free screenings to start. No card required.</div>
+      <form method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="field">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" required autofocus value="{{ email or '' }}">
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" required minlength="8" placeholder="At least 8 characters">
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Create account</button>
+      </form>
+      <div class="auth-switch">Already have an account? <a href="{{ url_for('auth.login') }}">Log in</a></div>
+    </div>
+  </div>
+</div>
+{% endblock %}

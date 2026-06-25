@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}History — Sanctum{% endblock %}
+{% block content %}
+
+<div class="hero" style="padding-top:40px; padding-bottom:8px;">
+  <div class="eyebrow">History</div>
+  <h1>Past screenings.</h1>
+</div>
+
+<div style="display:flex; justify-content:flex-end; margin-bottom:18px;">
+  <a href="{{ url_for('screening.history_export_csv') }}" class="btn btn-ghost">Export CSV</a>
+</div>
+
+{% if rows %}
+<div class="tool-card" style="padding:0; overflow-x:auto;">
+  <table style="width:100%; border-collapse:collapse; font-size:13.5px;">
+    <thead>
+      <tr style="border-bottom:1px solid var(--line);">
+        <th style="text-align:left; padding:14px 16px; color:var(--text-faint); font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.06em;">Date</th>
+        <th style="text-align:left; padding:14px 16px; color:var(--text-faint); font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.06em;">Query</th>
+        <th style="text-align:left; padding:14px 16px; color:var(--text-faint); font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.06em;">Matches</th>
+        <th style="text-align:left; padding:14px 16px; color:var(--text-faint); font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.06em;">Risk</th>
+        <th style="padding:14px 16px;"></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in rows %}
+      <tr style="border-bottom:1px solid var(--line-soft);">
+        <td style="padding:14px 16px; color:var(--text-dim); white-space:nowrap;">{{ row.created_at[:16].replace('T', ' ') }}</td>
+        <td style="padding:14px 16px; color:var(--text);">{{ row.query_name }}</td>
+        <td style="padding:14px 16px; font-family:var(--mono);">{{ row.match_count }}</td>
+        <td style="padding:14px 16px; color:{{ 'var(--oxblood-bright)' if row.match_count and row.match_count > 0 else 'var(--emerald-bright)' }};">{{ row.risk_label or '—' }}</td>
+        <td style="padding:14px 16px; text-align:right;">
+          {% if row.kind == 'single' %}
+          <a href="{{ url_for('screening.history_report_pdf', log_id=row.id) }}" style="font-size:12.5px;">PDF report</a>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<p style="color:var(--text-dim);">No screenings yet. <a href="{{ url_for('screening.dashboard') }}">Run your first one</a>.</p>
+{% endif %}
+
+{% endblock %}

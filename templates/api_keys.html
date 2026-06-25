@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}API Keys — Sanctum{% endblock %}
+{% block content %}
+
+<div class="hero" style="padding-top:40px; padding-bottom:8px;">
+  <div class="eyebrow">Developers</div>
+  <h1>API keys.</h1>
+  <p class="lede">Integrate screening directly into your own systems. <code class="mono">POST /v1/screen</code> with an <code class="mono">X-API-Key</code> header.</p>
+</div>
+
+{% if locked %}
+<div class="locked-feature">
+  API access is a Pro feature.
+  <a href="{{ url_for('billing.pricing') }}" class="btn btn-primary">Upgrade to Pro</a>
+</div>
+{% else %}
+
+{% if new_key %}
+<div class="notice" style="margin-bottom:28px;">
+  <ul>
+    <li><strong>Copy this key now — you won't see it again:</strong></li>
+  </ul>
+  <p class="mono" style="background:var(--bg-soft); padding:14px; border-radius:var(--radius); word-break:break-all; color:var(--brass); margin-top:10px;">{{ new_key }}</p>
+</div>
+{% endif %}
+
+<div class="tool-card" style="margin-bottom:32px;">
+  <span class="label">Create a new key</span>
+  <form method="POST" action="{{ url_for('api_keys.create') }}" class="batch-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="row">
+      <input type="text" name="label" placeholder="Label — e.g. Production server" style="flex:1 1 240px;">
+      <button type="submit" class="btn btn-primary">Create key</button>
+    </div>
+  </form>
+</div>
+
+<section class="block" style="border-top:none; padding-top:0;">
+  <h2>Your keys</h2>
+  {% if keys %}
+    {% for k in keys %}
+    <div class="match-row">
+      <div>
+        <div class="match-name mono">{{ k.key_prefix }}…</div>
+        <div class="match-meta">{{ k.label or 'Unnamed' }} · created {{ k.created_at[:10] }}{% if k.last_used_at %} · last used {{ k.last_used_at[:16].replace('T', ' ') }}{% else %} · never used{% endif %}{% if k.revoked %} · REVOKED{% endif %}</div>
+      </div>
+      {% if not k.revoked %}
+      <form method="POST" action="{{ url_for('api_keys.revoke', key_id=k.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-ghost" style="font-size:11px; padding:8px 12px;">Revoke</button>
+      </form>
+      {% endif %}
+    </div>
+    {% endfor %}
+  {% else %}
+    <p style="color:var(--text-dim);">No API keys yet.</p>
+  {% endif %}
+</section>
+
+<section class="block">
+  <h2>Example request</h2>
+  <pre class="mono" style="background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:18px; font-size:12.5px; overflow-x:auto; color:var(--text-dim);">curl -X POST {{ request.host_url }}v1/screen \
+  -H "X-API-Key: sk_live_..." \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Some Name", "threshold": 80}'</pre>
+</section>
+
+{% endif %}
+{% endblock %}

@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — Sanctum{% endblock %}
+{% block content %}
+
+<div class="hero" style="padding-top:40px; padding-bottom:8px;">
+  <div class="eyebrow">Dashboard</div>
+  <h1>Screen a name.</h1>
+</div>
+
+<div class="account-bar">
+  <span>
+    {% if current_user.subscription_status == 'active' %}
+      Plan: <span class="plan-pill pro">Pro</span> — unlimited screening
+    {% else %}
+      Plan: <span class="plan-pill">Free</span> — {{ current_user.screenings_used }}/{{ free_quota }} screenings used
+    {% endif %}
+  </span>
+  {% if current_user.subscription_status != 'active' %}
+    <a href="{{ url_for('billing.pricing') }}" class="btn-nav">Upgrade to Pro</a>
+  {% endif %}
+</div>
+
+<div class="tool-card">
+  <span class="label">Screen a name</span>
+  <div class="screen-row">
+    <input type="text" id="nameInput" placeholder="e.g. a customer, counterparty, or vendor name" maxlength="200" autocomplete="off">
+    <button id="screenBtn" type="button" class="btn btn-primary">Screen</button>
+  </div>
+  <div class="threshold-row">
+    <label for="thresholdInput" style="margin:0;">Sensitivity</label>
+    <input type="range" id="thresholdInput" min="60" max="100" value="80">
+    <span id="thresholdValue" class="mono">80</span>
+  </div>
+  <div class="status-banner" id="statusBanner"></div>
+  <div class="result-area" id="resultArea"></div>
+</div>
+
+<section class="block">
+  <h2>Batch screening</h2>
+  {% if current_user.subscription_status == 'active' %}
+    <p style="margin-top:0; color:var(--text-dim); font-size:14.5px;">Upload a CSV of names. Get the same file back with a match score and risk flag added to every row.</p>
+    <form class="batch-form" id="batchForm">
+      <div class="row"><input type="file" id="batchFile" accept=".csv" required></div>
+      <div class="row">
+        <label for="batchColumn" style="margin:0;">Name column:</label>
+        <input type="text" id="batchColumn" class="small mono" value="name">
+        <button type="submit" class="btn btn-primary">Screen file</button>
+      </div>
+    </form>
+    <div class="status-banner" id="batchStatus"></div>
+  {% else %}
+    <div class="locked-feature">
+      Batch screening is a Pro feature.
+      <a href="{{ url_for('billing.pricing') }}" class="btn btn-primary">Upgrade to Pro</a>
+    </div>
+  {% endif %}
+</section>
+
+<section class="block">
+  <div class="notice">
+    <ul>
+      <li><strong>No match ≠ cleared.</strong> It means no match against the lists currently loaded.</li>
+      <li><strong>Name-only matching is one layer, not the whole control.</strong> It does not check date of birth, ID numbers, or ownership structure.</li>
+      <li><strong>This is not legal advice.</strong> Talk to a compliance officer or lawyer for anything with real exposure.</li>
+    </ul>
+  </div>
+</section>
+
+<script>
+const nameInput = document.getElementById('nameInput');
+const screenBtn = document.getElementById('screenBtn');
+const thresholdInput = document.getElementById('thresholdInput');
+const thresholdValue = document.getElementById('thresholdValue');
+const statusBanner = document.getElementById('statusBanner');
+const resultArea = document.getElementById('resultArea');
+
+thresholdInput.addEventListener('input', () => { thresholdValue.textContent = thresholdInput.value; });
+
+function escapeHtml(str){ const d = document.createElement('div'); d.textContent = str; return d.innerHTML; }
+
+function renderResult(data){
+  resultArea.innerHTML = '';
+  if (data.used_demo_data){
+    statusBanner.textContent = 'Live list data could not be reached right now — showing results against small fictional demo data only.';
+    statusBanner.className = 'status-banner show demo';
+  } else {
+    statusBanner.className = 'status-banner';
+  }
+
+  const wrap = document.createElement('div');
+  wrap.className = 'seal-wrap';
+  const seal = document.createElement('div');
+  if (data.match_count > 0){ seal.className = 'seal flag'; seal.textContent = 'Flagged'; }
+  else { seal.className = 'seal clear'; seal.textContent = 'No match'; }
+  wrap.appendChild(seal);
+  resultArea.appendChild(wrap);
+
+  if (data.match_count === 0){
+    const p = document.createElement('p');
+    p.className = 'result-empty'; p.style.textAlign = 'center';
+    p.textContent = `No matches for "${data.query}" at sensitivity ${data.threshold}.`;
+    resultArea.appendChild(p);
+    return;
+  }
+
+  data.matches.forEach(m => {
+    const row = document.createElement('div');
+    row.className = 'match-row';
+    row.innerHTML = `<div><div class="match-name">${escapeHtml(m.name)}</div>
+      <div class="match-meta">${escapeHtml(m.source)}${m.primary_name ? ' · listed under ' + escapeHtml(m.primary_name) : ''}</div>
+      <div class="match-meta">${escapeHtml(m.risk)}</div></div>
+      <div class="match-score mono">${m.score.toFixed(1)}</div>`;
+    resultArea.appendChild(row);
+  });
+}
+
+async function runScreen(){
+  const name = nameInput.value.trim();
+  if (!name) { nameInput.focus(); return; }
+
+  screenBtn.disabled = true; screenBtn.textContent = 'Screening…';
+  resultArea.innerHTML = '<p class="result-empty">Checking against OFAC + UN lists…</p>';
+  statusBanner.className = 'status-banner';
+
+  try {
+    const res = await fetch('/api/screen', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({name: name, threshold: parseInt(thresholdInput.value, 10)})
+    });
+    const data = await res.json();
+    if (!res.ok){
+      resultArea.innerHTML = `<p class="result-empty">${escapeHtml(data.error || 'Something went wrong.')}</p>`;
+      if (data.quota_exhausted){
+        resultArea.innerHTML += `<p class="result-empty" style="margin-top:8px;"><a href="{{ url_for('billing.pricing') }}">Upgrade to Pro</a> for unlimited screening.</p>`;
+      }
+      return;
+    }
+    renderResult(data);
+  } catch (err){
+    resultArea.innerHTML = '<p class="result-empty">Could not reach the screening service.</p>';
+  } finally {
+    screenBtn.disabled = false; screenBtn.textContent = 'Screen';
+  }
+}
+
+screenBtn.addEventListener('click', runScreen);
+nameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') runScreen(); });
+
+const batchForm = document.getElementById('batchForm');
+if (batchForm){
+  const batchStatus = document.getElementById('batchStatus');
+  batchForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fileInput = document.getElementById('batchFile');
+    const column = document.getElementById('batchColumn').value.trim() || 'name';
+    if (!fileInput.files.length){ return; }
+
+    batchStatus.className = 'status-banner show';
+    batchStatus.textContent = 'Screening file…';
+
+    const formData = new FormData();
+    formData.append('file', fileInput.files[0]);
+    formData.append('name_column', column);
+    formData.append('threshold', thresholdInput.value);
+
+    try {
+      const res = await fetch('/api/screen-batch', { method: 'POST', body: formData });
+      if (!res.ok){
+        const data = await res.json().catch(() => ({}));
+        batchStatus.className = 'status-banner show demo';
+        batchStatus.textContent = data.error || 'Could not screen that file.';
+        return;
+      }
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'screening_results.csv';
+      document.body.appendChild(a); a.click(); a.remove();
+      batchStatus.className = 'status-banner show ok';
+      batchStatus.textContent = 'Done — results downloaded.';
+    } catch (err){
+      batchStatus.className = 'status-banner show demo';
+      batchStatus.textContent = 'Could not reach the screening service.';
+    }
+  });
+}
+</script>
+{% endblock %}
