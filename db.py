@@ -109,6 +109,26 @@ def init_db() -> None:
 
 def create_user(email: str, password_hash: str) -> int:
     conn = get_conn()
+
+    # أول مستخدم يصبح Admin، والبقية مستخدمون عاديون
+    count = conn.execute("SELECT COUNT(*) FROM users").fetchone()[0]
+    is_admin = 1 if count == 0 else 0
+
+    cur = conn.execute(
+        "INSERT INTO users (email, password_hash, created_at, is_admin) VALUES (?, ?, ?, ?)",
+        (
+            email,
+            password_hash,
+            datetime.now(timezone.utc).isoformat(),
+            is_admin,
+        ),
+    )
+
+    conn.commit()
+    user_id = cur.lastrowid
+    conn.close()
+    return user_id
+    conn = get_conn()
     cur = conn.execute(
         "INSERT INTO users (email, password_hash, created_at, is_admin) ,VALUES (?, ?, ? ,1)",
         (email, password_hash, datetime.now(timezone.utc).isoformat()),
