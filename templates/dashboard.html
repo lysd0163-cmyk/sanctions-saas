@@ -19,6 +19,16 @@
     <a href="{{ url_for('billing.pricing') }}" class="btn-nav">Upgrade to Pro</a>
   {% endif %}
 </div>
+</div>
+
+{% if current_user.is_admin %}
+<div style="margin:20px 0;">
+    <a href="/admin" class="btn btn-primary">
+        🛠 Admin Dashboard
+    </a>
+</div>
+{% endif %}
+
 
 <div class="tool-card">
   <span class="label">Screen a name</span>
