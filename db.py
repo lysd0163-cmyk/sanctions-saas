@@ -115,6 +115,7 @@ def init_db() -> None:
             revoked INTEGER NOT NULL DEFAULT 0
         
     )
+    """)
     conn.execute("""
     CREATE TABLE IF NOT EXISTS site_visits (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
