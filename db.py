@@ -128,15 +128,7 @@ def create_user(email: str, password_hash: str) -> int:
     user_id = cur.lastrowid
     conn.close()
     return user_id
-    conn = get_conn()
-    cur = conn.execute(
-        "INSERT INTO users (email, password_hash, created_at, is_admin) ,VALUES (?, ?, ? ,1)",
-        (email, password_hash, datetime.now(timezone.utc).isoformat()),
-    )
-    conn.commit()
-    user_id = cur.lastrowid
-    conn.close()
-    return user_id
+    
 
 
 def get_user_by_id(user_id: int):
