@@ -22,7 +22,23 @@ def get_conn() -> sqlite3.Connection:
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
     return conn
-
+def log_site_visit(ip_address: str, page: str, user_agent: str) -> None:
+    conn = get_conn()
+    conn.execute(
+        """
+        INSERT INTO site_visits
+        (ip_address, page, user_agent, visited_at)
+        VALUES (?, ?, ?, ?)
+        """,
+        (
+            ip_address,
+            page,
+            user_agent,
+            datetime.now(timezone.utc).isoformat(),
+        ),
+    )
+    conn.commit()
+    conn.close()
 
 def init_db() -> None:
     conn = get_conn()
