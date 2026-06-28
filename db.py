@@ -97,8 +97,18 @@ def init_db() -> None:
             created_at TEXT NOT NULL,
             last_used_at TEXT,
             revoked INTEGER NOT NULL DEFAULT 0
-        )
-    """)
+        
+    )
+    conn.execute("""
+    CREATE TABLE IF NOT EXISTS site_visits (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        ip_address TEXT,
+        page TEXT,
+        user_agent TEXT,
+        visited_at TEXT NOT NULL
+    )
+""")
+    
     conn.commit()
     conn.close()
 
