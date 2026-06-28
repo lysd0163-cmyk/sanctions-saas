@@ -35,7 +35,8 @@ def create_app():
     app.register_blueprint(jobs_bp)
     app.register_blueprint(api_keys_bp)
     app.register_blueprint(public_api_bp)
-app.register_blueprint(admin_bp)
+    app.register_blueprint(admin_bp)
+
     return app
 
 
