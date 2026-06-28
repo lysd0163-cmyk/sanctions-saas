@@ -1,1 +1,28 @@
+{% extends "base.html" %}
 
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<h1>Admin Dashboard</h1>
+
+<div class="tool-card">
+    <h3>👥 Total Users</h3>
+    <h2>{{ total_users }}</h2>
+</div>
+
+<div class="tool-card">
+    <h3>🌍 Total Visitors</h3>
+    <h2>{{ total_visits }}</h2>
+</div>
+
+<div class="tool-card">
+    <h3>📝 Total Screenings</h3>
+    <h2>{{ total_screenings }}</h2>
+</div>
+
+<div class="tool-card">
+    <h3>💳 Active Subscriptions</h3>
+    <h2>{{ active_subscriptions }}</h2>
+</div>
+
+{% endblock %}
