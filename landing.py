@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, render_template, request, session
-
+from db import log_site_visit
 from sanctions_screener import risk_label, screen_name
 from screening_engine import get_entries
 
@@ -10,6 +10,11 @@ ANONYMOUS_DEMO_LIMIT = 3
 
 @landing_bp.route("/")
 def index():
+    log_site_visit(
+    request.remote_addr,
+    request.path,
+    request.headers.get("User-Agent", "")
+    )
     return render_template("landing.html")
 
 
