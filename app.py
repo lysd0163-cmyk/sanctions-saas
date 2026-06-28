@@ -4,7 +4,7 @@ from flask import Flask, g
 
 import db
 from auth_helpers import get_csrf_token, load_logged_in_user
-
+from admin import admin_bp
 
 def create_app():
     app = Flask(__name__)
@@ -35,7 +35,7 @@ def create_app():
     app.register_blueprint(jobs_bp)
     app.register_blueprint(api_keys_bp)
     app.register_blueprint(public_api_bp)
-
+app.register_blueprint(admin_bp)
     return app
 
 
