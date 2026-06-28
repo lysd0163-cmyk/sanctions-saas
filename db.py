@@ -110,7 +110,7 @@ def init_db() -> None:
 def create_user(email: str, password_hash: str) -> int:
     conn = get_conn()
     cur = conn.execute(
-        "INSERT INTO users (email, password_hash, created_at) VALUES (?, ?, ?)",
+        "INSERT INTO users (email, password_hash, created_at, is_admin) ,VALUES (?, ?, ? 1)",
         (email, password_hash, datetime.now(timezone.utc).isoformat()),
     )
     conn.commit()
