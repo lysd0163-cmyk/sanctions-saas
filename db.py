@@ -35,7 +35,8 @@ def init_db() -> None:
             stripe_customer_id TEXT,
             stripe_subscription_id TEXT,
             subscription_status TEXT NOT NULL DEFAULT 'free',
-            screenings_used INTEGER NOT NULL DEFAULT 0
+            screenings_used INTEGER NOT NULL DEFAULT 0،
+            is_admin INTEGER NOT NULL DEFAULT 0
         )
     """)
     conn.execute("""
