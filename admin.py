@@ -36,7 +36,8 @@ FROM (
     return render_template(
         "admin.html",
         active_users=active_users,
-returning_users=returning_users,
+        returning_users=returning_users,
+
         total_screenings=total_screenings,
         
         active_subscriptions=active_subscriptions,
