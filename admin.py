@@ -11,12 +11,10 @@ def admin_dashboard():
 
     conn = db.get_conn()
 
-    # إجمالي المستخدمين
     total_users = conn.execute(
         "SELECT COUNT(*) FROM users"
     ).fetchone()[0]
 
-    # إجمالي الزوار
     try:
         total_visits = conn.execute(
             "SELECT COUNT(*) FROM visits"
@@ -24,29 +22,18 @@ def admin_dashboard():
     except Exception:
         total_visits = 0
 
-    # المستخدمون النشطون (أجروا فحصاً واحداً على الأقل)
-    active_users = conn.execute("""
-        SELECT COUNT(DISTINCT user_id)
-        FROM screening_logs
-    """).fetchone()[0]
+    active_users = conn.execute(
+        "SELECT COUNT(DISTINCT user_id) FROM screening_logs"
+    ).fetchone()[0]
 
-    # المستخدمون العائدون (أجروا أكثر من فحص)
-    returning_users = conn.execute("""
-        SELECT COUNT(*)
-        FROM (
-            SELECT user_id
-            FROM screening_logs
-            GROUP BY user_id
-            HAVING COUNT(*) > 1
-        )
-    """).fetchone()[0]
+    returning_users = conn.execute(
+        "SELECT COUNT(*) FROM (SELECT user_id FROM screening_logs GROUP BY user_id HAVING COUNT(*) > 1)"
+    ).fetchone()[0]
 
-    # إجمالي الفحوصات
     total_screenings = conn.execute(
         "SELECT COUNT(*) FROM screening_logs"
     ).fetchone()[0]
 
-    # الاشتراكات النشطة
     active_subscriptions = conn.execute(
         "SELECT COUNT(*) FROM users WHERE subscription_status='active'"
     ).fetchone()[0]
