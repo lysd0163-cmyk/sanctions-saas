@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+
+<div class="hero" style="padding-top:40px; padding-bottom:8px;">
+  <div class="eyebrow">Admin</div>
+  <h1>Control Panel</h1>
+</div>
+
+<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:16px; margin:32px 0;">
+
+  <div class="tool-card" style="text-align:center; padding:24px 16px;">
+    <div style="font-size:2rem; margin-bottom:8px;">👥</div>
+    <div style="font-size:2rem; font-weight:700; color:var(--accent,#6c63ff);">{{ total_users }}</div>
+    <div style="font-size:13px; color:var(--text-dim,#888); margin-top:6px;">Total Users</div>
+  </div>
+
+  <div class="tool-card" style="text-align:center; padding:24px 16px;">
+    <div style="font-size:2rem; margin-bottom:8px;">🌍</div>
+    <div style="font-size:2rem; font-weight:700; color:var(--accent,#6c63ff);">{{ total_visits }}</div>
+    <div style="font-size:13px; color:var(--text-dim,#888); margin-top:6px;">Total Visitors</div>
+  </div>
+
+  <div class="tool-card" style="text-align:center; padding:24px 16px;">
+    <div style="font-size:2rem; margin-bottom:8px;">👤</div>
+    <div style="font-size:2rem; font-weight:700; color:var(--accent,#6c63ff);">{{ active_users }}</div>
+    <div style="font-size:13px; color:var(--text-dim,#888); margin-top:6px;">Active Users</div>
+  </div>
+
+  <div class="tool-card" style="text-align:center; padding:24px 16px;">
+    <div style="font-size:2rem; margin-bottom:8px;">🔄</div>
+    <div style="font-size:2rem; font-weight:700; color:var(--accent,#6c63ff);">{{ returning_users }}</div>
+    <div style="font-size:13px; color:var(--text-dim,#888); margin-top:6px;">Returning Users</div>
+  </div>
+
+  <div class="tool-card" style="text-align:center; padding:24px 16px;">
+    <div style="font-size:2rem; margin-bottom:8px;">📄</div>
+    <div style="font-size:2rem; font-weight:700; color:var(--accent,#6c63ff);">{{ total_screenings }}</div>
+    <div style="font-size:13px; color:var(--text-dim,#888); margin-top:6px;">Total Screenings</div>
+  </div>
+
+  <div class="tool-card" style="text-align:center; padding:24px 16px;">
+    <div style="font-size:2rem; margin-bottom:8px;">💳</div>
+    <div style="font-size:2rem; font-weight:700; color:#22c55e;">{{ active_subscriptions }}</div>
+    <div style="font-size:13px; color:var(--text-dim,#888); margin-top:6px;">Active Subscriptions</div>
+  </div>
+
+</div>
+
+{% endblock %}
