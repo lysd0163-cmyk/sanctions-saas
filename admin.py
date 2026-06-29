@@ -11,6 +11,16 @@ def admin_dashboard():
 
     conn = db.get_conn()
 
+    # الإحصائيات القديمة
+    total_users = conn.execute(
+        "SELECT COUNT(*) FROM users"
+    ).fetchone()[0]
+
+    total_visits = conn.execute(
+        "SELECT COUNT(*) FROM site_visits"
+    ).fetchone()[0]
+
+    # الإحصائيات الجديدة
     active_users = conn.execute("""
         SELECT COUNT(DISTINCT user_id)
         FROM screening_logs
@@ -31,13 +41,16 @@ def admin_dashboard():
     ).fetchone()[0]
 
     active_subscriptions = conn.execute(
-        "SELECT COUNT(*) FROM users WHERE subscription_status='active'"
+        "SELECT COUNT(*) FROM users
+         WHERE subscription_status='active'"
     ).fetchone()[0]
 
     conn.close()
 
     return render_template(
         "admin.html",
+        total_users=total_users,
+        total_visits=total_visits,
         active_users=active_users,
         returning_users=returning_users,
         total_screenings=total_screenings,
