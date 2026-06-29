@@ -11,21 +11,26 @@ def admin_dashboard():
 
     conn = db.get_conn()
 
-    # الإحصائيات القديمة
+    # إجمالي المستخدمين المسجلين
     total_users = conn.execute(
         "SELECT COUNT(*) FROM users"
     ).fetchone()[0]
 
-    total_visits = conn.execute(
-        "SELECT COUNT(*) FROM site_visits"
-    ).fetchone()[0]
+    # إجمالي الزوار (عدد الجلسات أو الزيارات الفريدة إن وجد جدول visits)
+    try:
+        total_visits = conn.execute(
+            "SELECT COUNT(*) FROM visits"
+        ).fetchone()[0]
+    except Exception:
+        total_visits = "—"  # إذا لم يكن جدول visits موجوداً بعد
 
-    # الإحصائيات الجديدة
+    # المستخدمون النشطون (لديهم فحص واحد على الأقل)
     active_users = conn.execute("""
         SELECT COUNT(DISTINCT user_id)
         FROM screening_logs
     """).fetchone()[0]
 
+    # المستخدمون العائدون (أجروا أكثر من فحص واحد)
     returning_users = conn.execute("""
         SELECT COUNT(*)
         FROM (
@@ -36,13 +41,14 @@ def admin_dashboard():
         )
     """).fetchone()[0]
 
+    # إجمالي الفحوصات
     total_screenings = conn.execute(
         "SELECT COUNT(*) FROM screening_logs"
     ).fetchone()[0]
 
+    # الاشتراكات النشطة
     active_subscriptions = conn.execute(
-        "SELECT COUNT(*) FROM users
-         WHERE subscription_status='active'"
+        "SELECT COUNT(*) FROM users WHERE subscription_status='active'"
     ).fetchone()[0]
 
     conn.close()
