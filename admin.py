@@ -11,26 +11,26 @@ def admin_dashboard():
 
     conn = db.get_conn()
 
-    # إجمالي المستخدمين المسجلين
+    # إجمالي المستخدمين
     total_users = conn.execute(
         "SELECT COUNT(*) FROM users"
     ).fetchone()[0]
 
-    # إجمالي الزوار (عدد الجلسات أو الزيارات الفريدة إن وجد جدول visits)
+    # إجمالي الزوار
     try:
         total_visits = conn.execute(
             "SELECT COUNT(*) FROM visits"
         ).fetchone()[0]
     except Exception:
-        total_visits = "—"  # إذا لم يكن جدول visits موجوداً بعد
+        total_visits = 0
 
-    # المستخدمون النشطون (لديهم فحص واحد على الأقل)
+    # المستخدمون النشطون (أجروا فحصاً واحداً على الأقل)
     active_users = conn.execute("""
         SELECT COUNT(DISTINCT user_id)
         FROM screening_logs
     """).fetchone()[0]
 
-    # المستخدمون العائدون (أجروا أكثر من فحص واحد)
+    # المستخدمون العائدون (أجروا أكثر من فحص)
     returning_users = conn.execute("""
         SELECT COUNT(*)
         FROM (
